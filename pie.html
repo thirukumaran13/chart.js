@@ -1,0 +1,163 @@
+<html>
+<head>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@latest"></script>
+	<style>
+		.chart {
+			position:relative;
+			margin: auto;
+			resize: both;
+			min-width: 500px;
+			min-height: 400px;
+			overflow: auto;
+			background-color:white;
+			box-shadow: 0 0 5px 0px grey;
+			padding: 10px;
+		}
+	</style>
+</head>
+<body>
+	<h1>Pie Chart with percentage in  the data label and in tooltip</h1>
+	<div class='chart'>
+		<canvas id='chart'> </canvas>
+	</div>
+	<script>
+
+	Color.prototype.lightOrDark=function() {
+		// Thanks to https://awik.io/determine-color-bright-dark-using-javascript/
+		// Variables for red, green, blue values
+		var r, g, b, hsp;
+		r=this.values.rgb[0];
+		g=this.values.rgb[1];
+		b=this.values.rgb[2];
+
+		// HSP (Highly Sensitive Poo) equation from http://alienryderflex.com/hsp.html
+		hsp = Math.sqrt(
+		0.299 * (r * r) +
+		0.587 * (g * g) +
+		0.114 * (b * b)
+		);
+
+		// Using the HSP value, determine whether the color is light or dark
+		if (hsp>127.5) {
+
+			return 'light';
+		} 
+		else {
+
+			return 'dark';
+		}
+	}
+
+	chartOptions={
+		type: 'doughnut',
+		data: {
+				datasets: [{
+					data: [
+						50,
+						20,
+						10,
+						17,
+						29,
+					],
+					backgroundColor: [
+						'red',
+						'orange',
+						'yellow',
+						'green',
+						'blue'
+					],
+					label: 'dataset 1'
+				}],
+				labels: [
+					'red',
+					'orange',
+					'yellow',
+					'green',
+					'blue'
+				]
+			},
+		options: {
+			layout: {
+				padding: {
+					bottom: 50
+				}
+			},
+			responsive: true,
+			maintainAspectRatio: false,
+			legend: {
+				display: true,
+				position: "right",
+			},
+			tooltips: {
+				enabled: true,
+				mode: "index",
+				intersect: true,
+				backgroundColor: "rgba(255,255,224,0.9)",
+				bodyFontColor: 'black',
+				titleFontColor: 'black',
+				borderWidth: 1,
+				borderColor: 'black',
+				xPadding: 10,
+				yPadding: 10,
+				callbacks: {
+					label: function(tooltipItem, data) {
+						var visibles = this._chartInstance.getDatasetMeta(tooltipItem.datasetIndex).data.map(function(data) {
+								return !data.hidden;
+							} );
+						var allData = data.datasets[tooltipItem.datasetIndex].data;
+						var tooltipLabel = data.labels[tooltipItem.index];
+						var tooltipData = allData[tooltipItem.index];
+						var total = 0;
+						for (var i in allData) {
+							total +=  (parseFloat(allData[i]) * (visibles[i]?1:0));
+						}
+						var tooltipPercentage = Math.round((tooltipData / total) * 100);
+						return tooltipLabel + ': ' + tooltipData + ' (' + tooltipPercentage + '%)';
+					}
+				},
+			},
+			title: {
+				display: true,
+				fontSize: 20,
+				padding: 30,
+				text: 'Chart.js Pie Example with percentage in data labels and tooltip'
+			},
+			plugins: {
+				datalabels: {
+					clamp: true,
+					backgroundColor: function(context) {
+						return context.dataset.backgroundColor;
+					},
+					formatter: function(value, context) {
+						var visibles = context.chart.getDatasetMeta(context.datasetIndex).data.map(function(data) {
+								return !data.hidden;
+							} );
+						
+						var total = 0;
+						for (var i in context.dataset.data) {
+							total +=  (parseFloat(context.dataset.data[i]) * (visibles[i]?1:0));
+						}
+						var tooltipPercentage = Math.round((value / total) * 100);
+						return context.chart.data.labels[context.dataIndex] + ': ' + value + ' (' + tooltipPercentage + '%)';
+					},
+					color: function(context) { 
+						if(Color(context.dataset.backgroundColor[context.dataIndex]).lightOrDark()=="dark") 
+							return 'white';
+						else
+							return 'black';
+					},
+					anchor: 'end',
+					align: 'end',
+					padding: {
+						left: 20,
+						right: 20,
+					},
+				},
+			}
+		}
+	};
+	new Chart('chart',chartOptions);
+	</script>
+	</body>
+</html>
